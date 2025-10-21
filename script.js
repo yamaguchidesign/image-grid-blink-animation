@@ -167,8 +167,37 @@ function startBlinkAnimation(element, blinkPattern) {
 // ウィンドウリサイズ時にオーバーレイを再配置
 function handleResize() {
     const images = document.querySelectorAll('img.white-grid');
-    images.forEach((img, index) => {
-        createOverlay(img, index);
+    images.forEach((img, imgIndex) => {
+        const rect = img.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        // 各グリッドの位置を更新（アニメーションは実行しない）
+        const cols = 8;
+        const rows = 6;
+        const gridPositions = [];
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                gridPositions.push({
+                    x: col / cols,
+                    y: row / rows,
+                    name: `grid-${row}-${col}`,
+                    row: row,
+                    col: col
+                });
+            }
+        }
+
+        gridPositions.forEach((pos, gridIndex) => {
+            const overlay = document.getElementById(`white-grid-overlay-${imgIndex}-${pos.name}`);
+            if (overlay) {
+                overlay.style.left = (rect.left + scrollX + rect.width * pos.x) + 'px';
+                overlay.style.top = (rect.top + scrollY + rect.height * pos.y) + 'px';
+                overlay.style.width = (rect.width / cols) + 'px';
+                overlay.style.height = (rect.height / rows) + 'px';
+            }
+        });
     });
 }
 
