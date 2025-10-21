@@ -59,7 +59,7 @@ function createOverlay(img, index) {
         overlay.style.pointerEvents = 'none';
         overlay.style.zIndex = '10';
         overlay.style.opacity = '1';
-        overlay.style.transition = 'opacity 0.75s ease-out';
+        overlay.style.transition = 'opacity 0.1s ease-out';
 
         // 角丸の設定（各グリッドの位置に応じて）
         const borderRadius = getComputedStyle(img).borderRadius;
@@ -87,25 +87,81 @@ function createOverlay(img, index) {
         gridElements.push(overlay);
     });
 
-    // Zの字順と逆Nの字順で同時にフェードアウト
+    // チカチカパターンの定義
+    const blinkPattern = [
+        [20, 30],  // 1回目: 20ms非表示 → 30ms表示
+        [20, 60],  // 2回目: 20ms非表示 → 60ms表示  
+        [80, 100], // 3回目: 80ms非表示 → 100ms表示
+        [40, 50]   // 4回目: 40ms非表示 → 50ms表示
+    ];
+
+    // Zの字順と逆Nの字順で段階的にチカチカして消える
     const fadeDelay = 20; // 各グリッド間の遅延時間（ミリ秒）
-    
+    const reverseNDelay = 200; // 逆Nのアニメーション開始遅延（ミリ秒）
+
     gridPositions.forEach((pos, gridIndex) => {
         // Zの字順（左上から右下へ）
         const zOrderIndex = pos.row * cols + pos.col;
-        
-        // 逆Nの字順（左上から右下へ、列ごとに交互）
-        const reverseNOrderIndex = pos.col * rows + (pos.row % 2 === 0 ? pos.row : rows - 1 - pos.row);
-        
-        // より早い方のタイミングで消える
-        const orderIndex = Math.min(zOrderIndex, reverseNOrderIndex);
-        
+
+        // 逆Nの字順（全ての行が上から下で、左から右にかけて消える）
+        const reverseNOrderIndex = pos.col * rows + pos.row;
+
+        // Zの字順でチカチカして消える
         setTimeout(() => {
-            if (gridElements[gridIndex]) {
-                gridElements[gridIndex].style.opacity = '0';
-            }
-        }, 200 + (orderIndex * fadeDelay));
+            startBlinkAnimation(gridElements[gridIndex], blinkPattern);
+        }, 200 + (zOrderIndex * fadeDelay));
+
+        // 逆Nの字順でチカチカして消える（0.2秒遅延）
+        setTimeout(() => {
+            startBlinkAnimation(gridElements[gridIndex], blinkPattern);
+        }, 200 + reverseNDelay + (reverseNOrderIndex * fadeDelay));
     });
+}
+
+// チカチカアニメーションを開始する関数
+function startBlinkAnimation(element, blinkPattern) {
+    if (!element) return;
+
+    let currentStep = 0;
+    let totalDelay = 0;
+
+    function executeBlinkStep() {
+        if (currentStep >= blinkPattern.length) {
+            // 最後のステップが終わったら完全に非表示にする
+            element.style.opacity = '0';
+            element.style.display = 'none';
+            return;
+        }
+
+        const [hideTime, showTime] = blinkPattern[currentStep];
+
+        // 非表示にする
+        setTimeout(() => {
+            element.style.opacity = '0';
+        }, totalDelay);
+
+        // 表示する
+        setTimeout(() => {
+            element.style.opacity = '1';
+        }, totalDelay + hideTime);
+
+        totalDelay += hideTime + showTime;
+        currentStep++;
+
+        // 次のステップを実行（最後のステップでない場合のみ）
+        if (currentStep < blinkPattern.length) {
+            setTimeout(executeBlinkStep, hideTime + showTime);
+        }
+    }
+
+    // 最後のステップの表示時間が終わった後に完全に非表示にする
+    const totalBlinkTime = blinkPattern.reduce((total, [hideTime, showTime]) => total + hideTime + showTime, 0);
+    setTimeout(() => {
+        element.style.opacity = '0';
+        element.style.display = 'none';
+    }, totalBlinkTime);
+
+    executeBlinkStep();
 }
 
 // ウィンドウリサイズ時にオーバーレイを再配置
@@ -140,7 +196,6 @@ function handleScroll() {
                 });
             }
         }
-
         gridPositions.forEach((pos, gridIndex) => {
             const overlay = document.getElementById(`white-grid-overlay-${imgIndex}-${pos.name}`);
             if (overlay) {
