@@ -24,10 +24,10 @@ function createOverlay(img, index) {
     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-    // 8×6のグリッドを作成（48個のグリッド）
+    // 6×5のグリッドを作成（30個のグリッド）
     const gridPositions = [];
-    const cols = 8;
-    const rows = 6;
+    const cols = 6;
+    const rows = 5;
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -89,15 +89,15 @@ function createOverlay(img, index) {
 
     // チカチカパターンの定義
     const blinkPattern = [
-        [20, 30],  // 1回目: 20ms非表示 → 30ms表示
-        [20, 60],  // 2回目: 20ms非表示 → 60ms表示  
-        [80, 100], // 3回目: 80ms非表示 → 100ms表示
-        [40, 50]   // 4回目: 40ms非表示 → 50ms表示
+        [15, 20],  // 1回目: 15ms非表示 → 20ms表示
+        [15, 40],  // 2回目: 15ms非表示 → 40ms表示  
+        [60, 80],  // 3回目: 60ms非表示 → 80ms表示
+        [30, 40]   // 4回目: 30ms非表示 → 40ms表示
     ];
 
     // Zの字順と逆Nの字順で段階的にチカチカして消える
-    const fadeDelay = 20; // 各グリッド間の遅延時間（ミリ秒）
-    const reverseNDelay = 200; // 逆Nのアニメーション開始遅延（ミリ秒）
+    const fadeDelay = 12; // 各グリッド間の遅延時間（ミリ秒）
+    const reverseNDelay = 100; // 逆Nのアニメーション開始遅延（ミリ秒）
 
     gridPositions.forEach((pos, gridIndex) => {
         // Zの字順（左上から右下へ）
@@ -109,12 +109,12 @@ function createOverlay(img, index) {
         // Zの字順でチカチカして消える
         setTimeout(() => {
             startBlinkAnimation(gridElements[gridIndex], blinkPattern);
-        }, 200 + (zOrderIndex * fadeDelay));
+        }, 50 + (zOrderIndex * fadeDelay));
 
-        // 逆Nの字順でチカチカして消える（0.2秒遅延）
+        // 逆Nの字順でチカチカして消える（0.1秒遅延）
         setTimeout(() => {
             startBlinkAnimation(gridElements[gridIndex], blinkPattern);
-        }, 200 + reverseNDelay + (reverseNOrderIndex * fadeDelay));
+        }, 50 + reverseNDelay + (reverseNOrderIndex * fadeDelay));
     });
 }
 
@@ -173,8 +173,8 @@ function handleResize() {
         const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
         // 各グリッドの位置を更新（アニメーションは実行しない）
-        const cols = 8;
-        const rows = 6;
+        const cols = 6;
+        const rows = 5;
         const gridPositions = [];
 
         for (let row = 0; row < rows; row++) {
@@ -210,8 +210,8 @@ function handleScroll() {
         const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
         // 各グリッドの位置を更新
-        const cols = 8;
-        const rows = 6;
+        const cols = 6;
+        const rows = 5;
         const gridPositions = [];
 
         for (let row = 0; row < rows; row++) {
@@ -237,6 +237,17 @@ function handleScroll() {
 
 // DOMが読み込まれた後に実行
 document.addEventListener('DOMContentLoaded', createWhiteGridOverlay);
+
+// ホバー時のアニメーション実行
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('img.white-grid');
+    images.forEach((img, index) => {
+        img.addEventListener('mouseenter', () => {
+            // ホバー時にアニメーションを再実行
+            createOverlay(img, index);
+        });
+    });
+});
 
 // ウィンドウリサイズとスクロールのイベントリスナーを追加
 window.addEventListener('resize', handleResize);
